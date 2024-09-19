@@ -1,71 +1,24 @@
 var express = require('express');
 var router = express.Router();
+var cors = require('cors');
 var qs = require('qs');
 const { v4: uuidv4 } = require('uuid');
 
+// Utiliser CORS pour autoriser toutes les origines ou configurer des origines spécifiques
+router.use(cors({
+  origin: 'https://votre-domaine.com', // Remplacez par votre domaine, sinon mettre '*' pour autoriser toutes les origines.
+  methods: ['GET', 'POST'], // Vous pouvez spécifier les méthodes autorisées
+  allowedHeaders: ['Content-Type'] // Vous pouvez spécifier les headers autorisés
+}));
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
-});
-
-
-
-router.get('/api/paiement/', async function(req, res, next) {
-  try {
-   
-    const { amount, currency, phone } = req.query;
-
-    const queryParams = JSON.parse({
-      PayType: "2",
-      MerchantID: "caa878a9f0a64c30b7d026d2dc79c1bc",
-      MerchantPassword: "3eb3d38a20ae48db84845df2596c6d3b",
-      Amount: '500',
-      Currency: "USD",
-      Telephone: "243824043468",
-      Language: "fr",
-      Reference: "REF09766789",
-      Email: "ambujoel@gmail.com",
-      Reference: "referencegenrer",
-      SuccessURL: "https://rtnc.cd",
-      FailureURL: "https://rtnc.cd",
-      CancelURL: "https://rtnc.cd",
-    });
-
-    console.log("queryParams :", queryParams);
-
-    const response = await fetch(`https://api.maxicashapp.com/PayEntry?data={PayType:"MaxiCash",Amount:"500",Currency:"maxiDollar",Telephone:"0824707127",MerchantID:"caa878a9f0a64c30b7d026d2dc79c1bc",MerchantPassword:"3eb3d38a20ae48db84845df2596c6d3b",Language:"fr",Reference:"ref/11/04/",Accepturl:"https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/",Declineurl:"https://developer.android.com/guide/topics/manifest/receiver-element",NotifyURL:""}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      console.error('Erreur API:', data);
-      return res.status(500).json({ error: 'Erreur de l\'API MaxiCash', details: data });
-    }
-
-    return res.json(data);
-  } catch (error) {
-    console.error('Erreur de requête:', error);
-    return res.status(500).json({ error: 'Une erreur est survenue lors de la requête', details: error });
-  }
-});
-
-
-
-
+// Votre fonction maxicash et route
 async function maxicash(phone, currency, amount) {
   try {
-
     phone = phone.replace(/\s+/g, '');
     if (!phone.startsWith('+')) {
       phone = '+' + phone;  
     }
     let head = phone.toString().slice(0, 6);
-
 
     let payload = {
       "RequestData": {
@@ -81,8 +34,7 @@ async function maxicash(phone, currency, amount) {
       "CurrencyCode": currency
     };
 
-
-    console.log('Get Amount :', payload.RequestData.Amount); 
+    console.log('Get Amount :', payload.RequestData.Amount);
 
     const response = await fetch('https://webapi.maxicashapp.com/Integration/PayNowSync', {
       method: 'POST',
@@ -117,9 +69,5 @@ router.get('/api/maxicash', async function(req, res) {
 
   return res.status(200).json({ success: true, message: result.message });
 });
-
-
-
-
 
 module.exports = router;
